@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: url-shortener-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: url-shortener-frontend
+  template:
+    metadata:
+      labels:
+        app: url-shortener-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: url-shortener-frontend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8501
+          env:
+            - name: BACKEND_URL
+              value: "http://192.168.49.2:30002"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8501
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8501
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: url-shortener-frontend
+spec:
+  selector:
+    app: url-shortener-frontend
+  ports:
+    - port: 80
+      targetPort: 8501
+      nodePort: 30001
+  type: NodePort
